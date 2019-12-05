@@ -1,2 +1,2 @@
-# spaceInvaders
-space Invaders comparison across languages
+# Atari Breakout
+Atari Breakout comparison across languages
