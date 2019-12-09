@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Time Traveling Games</title>
+  <script type="text/javascript" src="elm.js"></script>
+  <style type="text/css">
+      body, html {
+        margin: 0;
+        padding: 0;
+      }
+      svg text {
+        cursor: default;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+  </style>
+</head>
+
+<body>
+</body>
+
+<script type="text/javascript">
+
+let elmModule = 'Breakout';
+
+let storageKey = 'time-travel-history';
+let storedState = sessionStorage.getItem(storageKey);
+let startingState = storedState ? JSON.parse(storedState) : null;
+let app = Elm[elmModule].init({ flags: startingState });
+app.ports.saveHistory.subscribe((state) => {
+    sessionStorage.setItem(storageKey, JSON.stringify(state));
+});
+
+</script>
+
+</html>
