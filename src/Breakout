@@ -1,6 +1,6 @@
 module Breakout exposing (..)
 
--- import Playground exposing (..)
+import Playground exposing (..)
 -- import TimeTravel exposing (..)
 import Random
 import Set
@@ -10,24 +10,25 @@ import Time as PosixTime
 -- PHYSICS PARAMETERS
 
 brickCount = 100
-ballRadius = 10
-paddleheight = 10
-paddleWidth = 50
+ballRadius = 7
+paddleHeight = 14
+paddleWidth = 70
 ballSpeed = 5
 ballColor = (rgb 160 160 160)
 paddleColor = (rgb 255 120 60)
 brickColor = blue
 gameWidth = 600
 gameHeight = 800
-brickWidth = 20
+brickWidth = 50
 brickHeight = 10
+marginSize = 5
 -- MAIN
 
-main = gameWithTimeTravel view update initialState
+main = game view update initialState
 
 type alias GameObject =
-  { x : Float
-  , y : Float
+  { x : Int
+  , y : Int
   , dx : Float
   , dy : Float
   , radius : Float -- ?
@@ -42,38 +43,38 @@ type alias Model =
 
 initialState : Model
 initialState =
-  { ball = { x = 0, y = 0, dx = 0, dy = 0, radius = ballRadius, shape = ballShape}
-  , paddle = { x = 0, y = 100, dx = 0, dy = 0, radius = 0, shape = paddleShape}
-  , bricks = [makeBricks 0 0 0] -- this is not what we want
+  { ball = { x = 0, y = -100, dx = 0, dy = 0, radius = ballRadius, shape = ballShape}
+  , paddle = { x = 0, y = -300, dx = 0, dy = 0, radius = 0, shape = paddleShape}
+  , bricks = makeBricks -- this is not what we want
   }
 
 ballShape =
-  [ (-ballRadius, 0)
-  , (0, ballRadius)
-  , (ballRadius, 0)
-  , (0, -ballRadius)
+  [ (-ballRadius, -ballRadius)
+  , (-ballRadius, ballRadius)
+  , (ballRadius, ballRadius)
+  , (ballRadius, -ballRadius)
   ]
 
 paddleShape =
   [ (-paddleWidth/2, -paddleHeight/2)
-  , (paddleWidth/2, paddleHeight/2)
   , (-paddleWidth/2, paddleHeight/2)
+  , (paddleWidth/2, paddleHeight/2)
   , (paddleWidth/2, -paddleHeight/2)
   ]
 
 brickShape =
   [ (-brickWidth/2, -brickHeight/2)
-  , (brickWidth/2, brickHeight/2)
   , (-brickWidth/2, brickHeight/2)
+  , (brickWidth/2, brickHeight/2)
   , (brickWidth/2, -brickHeight/2)
   ]
 
 makeBricks =
-  map makeBrick List.range(0, brickCount-1)
+  List.map makeBrick (List.range 0 (brickCount-1))
 
 makeBrick index =
-  { x = brickWidth*index%10
-  , y = brickHeight*index/10
+  { x = (remainderBy index 10) * (brickWidth + marginSize) - 300
+  , y =  (index // 10) * (brickHeight + marginSize) + 300
   , dx = 0
   , dy = 0
   , radius = 0
@@ -84,15 +85,15 @@ makeBrick index =
 
 view computer model =
   [rectangle black gameWidth gameHeight]
-    ++ [model.ball      |> viewGameObject ballColor]
-    ++ (model.paddle |> List.map (viewGameObject paddleColor))
+    ++ [(model.ball      |> viewGameObject ballColor)]
+    ++ [(model.paddle |> viewGameObject paddleColor)]
     ++ (model.bricks   |> List.map (viewGameObject brickColor))
 
-viewGameObject : Color -> Float -> GameObject -> Shape
+viewGameObject : Color -> GameObject -> Shape -- took out Float
 viewGameObject color obj =
   polygon color obj.shape
     |> fade 1.0 --opacity
-    |> move obj.x obj.y
+    |> move (toFloat obj.x) (toFloat obj.y)
 
 
 -- UPDATE
