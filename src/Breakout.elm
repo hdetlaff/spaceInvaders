@@ -21,6 +21,8 @@ gameHeight = 800
 brickWidth = 54
 brickHeight = 16
 marginSize = 5
+initBallX = 0
+initBallY = -99
 
 -- MAIN
 
@@ -40,13 +42,15 @@ type alias Model =
   { ball : GameObject
   , paddle : GameObject
   , bricks : List GameObject
+  , lives: List GameObject
   }
 
 initialState : Model
 initialState =
-  { ball = { x = 0, y = -100, dx = 3, dy = 3, collidedHoriz = False, collidedVert = False, shape = ballShape}
+  { ball = { x = initBallX, y = initBallY, dx = 3, dy = 3, collidedHoriz = False, collidedVert = False, shape = ballShape}
   , paddle = { x = 0, y = -300, dx = 0, dy = 0, collidedHoriz = False, collidedVert = False, shape = paddleShape}
   , bricks = makeBricks
+  , lives = makeLives 3
   }
 
 ballShape =
@@ -70,6 +74,19 @@ brickShape =
   , (brickWidth/2, -brickHeight/2)
   ]
 
+makeLives numLives =
+  List.map makeLife (List.range 0 (numLives-1))
+
+makeLife index =
+  { x = toFloat ((remainderBy 3 index) * (ballRadius*2 + marginSize) - 266)
+  , y =  -350
+  , dx = 0
+  , dy = 0
+  , collidedHoriz = False
+  , collidedVert = False
+  , shape = ballShape
+  }
+
 makeBricks =
   List.map makeBrick (List.range 0 (brickCount - 1))
 
@@ -87,9 +104,10 @@ makeBrick index =
 
 view computer model =
   [rectangle black gameWidth gameHeight]
-    ++ [(model.ball      |> viewGameObject ballColor)]
+    ++ [(model.ball   |> viewGameObject ballColor)]
     ++ [(model.paddle |> viewGameObject paddleColor)]
-    ++ (model.bricks   |> List.map (viewGameObject brickColor))
+    ++ (model.bricks  |> List.map (viewGameObject brickColor))
+    ++ (model.lives   |> List.map (viewGameObject ballColor))
 
 viewGameObject : Color -> GameObject -> Shape -- took out Float
 viewGameObject color obj =
@@ -105,12 +123,26 @@ update computer model =
      |> ballMotion
      |> paddleMotion computer
      |> checkCollisions
+     |> checkDeath
+
+checkDeath model =
+  if model.ball.y < model.paddle.y - paddleHeight/2 && (List.length model.lives) > 0 then
+    { ball = {x = initBallX, y = initBallY, dx = 3, dy = 3, collidedHoriz = False, collidedVert = False, shape = ballShape}
+    , paddle = model.paddle
+    , bricks = model.bricks
+    , lives = makeLives ((List.length model.lives)-1)
+    }
+  else if model.ball.y < model.paddle.y - paddleHeight/2 && (List.isEmpty model.lives) then
+    initialState
+  else
+   model
 
 paddleMotion computer model =
   if computer.mouse.x > (-305 + paddleWidth/2) &&  computer.mouse.x < (305 - paddleWidth/2) then
      { ball = model.ball
      , paddle = {x = computer.mouse.x, y = -300, dx = 0, dy = 0, collidedHoriz = False, collidedVert = False, shape = paddleShape}
      , bricks = model.bricks
+     , lives = model.lives
      }
   else
     model
@@ -157,12 +189,14 @@ brickCollision model =
   { ball = model.ball
   , paddle = model.paddle
   , bricks = List.map (checkBrick model.ball) model.bricks
+  , lives = model.lives
   }
 
 brickRemove model =
   { ball =  brickBounce model.ball model.bricks
   , paddle = model.paddle
   , bricks = List.filter (\b -> not (isCollidedHoriz b || isCollidedVert b)) model.bricks
+  , lives = model.lives
   }
 
 brickBounce ball bricks =
@@ -190,6 +224,7 @@ horizontalBounce model =
            }
   , paddle = model.paddle
   , bricks = model.bricks
+  , lives = model.lives
   }
 verticalBounce model =
   { ball = { x = model.ball.x
@@ -202,6 +237,7 @@ verticalBounce model =
            }
   , paddle = model.paddle
   , bricks = model.bricks
+  , lives = model.lives
   }
 
 checkCollisions model =
@@ -220,6 +256,7 @@ ballMotion model =
            , collidedVert = False
            , shape = ballShape
            }
-   , paddle = model.paddle
-   , bricks = model.bricks
-   }
+  , paddle = model.paddle
+  , bricks = model.bricks
+  , lives = model.lives
+  }
