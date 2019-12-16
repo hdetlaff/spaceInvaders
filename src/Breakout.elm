@@ -17,7 +17,7 @@ ballColor = (rgb 160 160 160)
 paddleColor = (rgb 255 120 60)
 brickColor = blue
 gameWidth = 600
-gameHeight = 800
+gameHeight = 700
 brickWidth = 54
 brickHeight = 16
 marginSize = 5
@@ -78,8 +78,8 @@ makeLives numLives =
   List.map makeLife (List.range 0 (numLives-1))
 
 makeLife index =
-  { x = toFloat ((remainderBy 3 index) * (ballRadius*2 + marginSize) - 266)
-  , y =  -350
+  { x = toFloat ((remainderBy 3 index) * (ballRadius*2 + marginSize) - 280)
+  , y =  -330
   , dx = 0
   , dy = 0
   , collidedHoriz = False
@@ -148,7 +148,7 @@ paddleMotion computer model =
     model
 
 paddleCollision model =
- if model.ball.y <= model.paddle.y + paddleHeight/2
+ if model.ball.y <= (model.paddle.y + paddleHeight )
    && model.ball.x >= model.paddle.x - paddleWidth/2
    && model.ball.x <= model.paddle.x + paddleWidth/2 then
      verticalBounce model
@@ -156,31 +156,31 @@ paddleCollision model =
    model
 
 wallCollision model =
-  if model.ball.x > gameWidth/2 + ballRadius/2 || model.ball.x < -1*(gameWidth/2 - ballRadius/2) then
+  if model.ball.x + ballRadius > gameWidth/2  || model.ball.x - ballRadius < -1*(gameWidth/2 ) then
      horizontalBounce model
-  else if model.ball.y > gameHeight/2 + ballRadius/2 || model.ball.y < -1*(gameHeight/2 - ballRadius/2) then
+  else if model.ball.y + ballRadius > gameHeight/2  || model.ball.y < -1*(gameHeight/2 - ballRadius/2) then
      verticalBounce model
   else
     model
 
 checkBrick ball brick =
-  if (ball.x >= brick.x - brickWidth/2
-   && ball.x <= brick.x + brickWidth/2
-   && ball.y + ballRadius/2 >= brick.y - brickWidth/2
-   && ball.y + ballRadius/2 <= brick.y + brickWidth/2)
-   || (ball.x >= brick.x - brickWidth/2
-   && ball.x <= brick.x + brickWidth/2
-   && ball.y - ballRadius/2 >= brick.y - brickWidth/2
-   && ball.y - ballRadius/2 <= brick.y + brickWidth/2) then
+  if (ball.x - ballRadius >= brick.x - brickWidth/2
+   && ball.x + ballRadius <= brick.x + brickWidth/2
+   && ball.y - ballRadius >= brick.y - brickWidth/2
+   && ball.y + ballRadius <= brick.y + brickWidth/2)
+   || (ball.x - ballRadius >= brick.x - brickWidth/2
+   && ball.x + ballRadius<= brick.x + brickWidth/2
+   && ball.y - ballRadius >= brick.y - brickWidth/2
+   && ball.y + ballRadius <= brick.y + brickWidth/2) then
      { brick | collidedVert = True }
-  else if (ball.x + ballRadius/2 >= brick.x - brickWidth/2
-   && ball.x + ballRadius/2 <= brick.x + brickWidth/2
-   && ball.y >= brick.y - brickWidth/2
-   && ball.y <= brick.y + brickWidth/2)
-   || (ball.x - ballRadius/2 >= brick.x - brickWidth/2
-   && ball.x - ballRadius/2 <= brick.x + brickWidth/2
-   && ball.y >= brick.y - brickWidth/2
-   && ball.y <= brick.y + brickWidth/2) then
+  else if (ball.x + ballRadius >= brick.x - brickWidth/2
+   && ball.x + ballRadius <= brick.x + brickWidth/2
+   && ball.y - ballRadius >= brick.y - brickWidth/2
+   && ball.y + ballRadius <= brick.y + brickWidth/2)
+   || (ball.x - ballRadius >= brick.x - brickWidth/2
+   && ball.x + ballRadius <= brick.x + brickWidth/2
+   && ball.y - ballRadius>= brick.y - brickWidth/2
+   && ball.y + ballRadius <= brick.y + brickWidth/2) then
      { brick | collidedHoriz = True }
   else
     brick
@@ -200,10 +200,10 @@ brickRemove model =
   }
 
 brickBounce ball bricks =
-  if List.any isCollidedHoriz bricks then
-    { ball | dx = -1 * ball.dx }
-  else if List.any isCollidedVert bricks then
+  if List.any isCollidedVert bricks then
     { ball | dy = -1 * ball.dy }
+  else if List.any isCollidedHoriz bricks then
+    { ball | dx = -1 * ball.dx }
   else
     ball
 
